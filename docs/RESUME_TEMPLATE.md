@@ -1,6 +1,8 @@
-# 简历模板（含 ArkPlots 项目经历）
+# 简历模板（基于开源项目 ArkPlots 的二次开发）
 
-> 用法：填好个人信息占位符；「项目经历」段落可直接粘贴，按目标岗位删改要点。数据均可在仓库验证，面试被追问时拿得出台面。
+> **归属说明（先读这个）**：ArkPlots 原项目是 ApodidaeDeSwift 的开源项目（github.com/ApodidaeDeSwift/ArkPlots）。你在它的基础上做二次开发（Android 适配等），并推动了一轮安全加固。简历里**不能写成"独立开发该项目"**，正确的写法是"基于开源项目 X 的二次开发/贡献"——这本身就是加分项（读得懂别人的代码库并有效改造，比从零写更考验工程能力）。
+>
+> 另外提醒：安全加固部分是 AI 辅助完成的，写进简历前请确保自己能讲清楚每一处的原理（文末附了追问预案）——面试官深挖时答不上来比不写更伤。
 
 ---
 
@@ -8,41 +10,33 @@
 
 - 姓名：〔姓名〕
 - 联系方式：〔手机 / 邮箱〕
-- GitHub：github.com/ApodidaeDeSwift
-- 求职意向：〔岗位，如：桌面/跨端开发工程师、全栈开发工程师〕
+- GitHub：github.com/Leslieryin
+- 求职意向：〔岗位，如：前端/跨端开发工程师、全栈开发工程师〕
 
-## 专业技能（示例，按实际调整）
+## 项目经历：基于开源项目 ArkPlots 的二次开发（个人项目）
 
-- 熟悉 Python 标准库与类型标注，具备零第三方依赖的本地服务设计经验（HTTP、线程模型、异常兜底）
-- 熟悉 React 19 + TypeScript + Vite 前端工程与 i18n 国际化方案
-- 熟悉 Windows 桌面交付链路：PyInstaller、Inno Setup、PowerShell、Authenticode 签名与 SmartScreen
-- 熟悉 Android 混合应用（Capacitor）离线打包与体积优化
-- 具备自动化测试习惯（unittest + mock）与安全意识（完整性校验、跨站防护）
+〔时间，如 2026.X – 至今〕 | 上游：github.com/ApodidaeDeSwift/ArkPlots · 我的 fork：github.com/Leslieryin/ArkPlots
 
-## 项目经历：ArkPlots —— 明日方舟剧情线梳理工具（个人开源项目）
+上游是明日方舟剧情线梳理工具（React + TypeScript 前端、Python 本地服务、Windows 桌面端）。我在其基础上完成了 Android 端适配，并主导了一轮安全与工程质量加固：
 
-〔时间，如 2026.X – 至今〕 | 独立开发 · github.com/ApodidaeDeSwift/ArkPlots
+- **Android 离线版适配**：用 Capacitor 将现有 React 前端打包为纯离线 APK——剧情数据随包、阅读记录存 localStorage、应用内检查剧情数据更新；通过封面重压缩（45MB → 5.5MB）把包体积控制在约 9MB，且不影响桌面端构建
+- **移动/桌面双端分流改造**：重构 `api.ts` 数据层，按运行环境分流（Capacitor 本地实现 vs 本地 HTTP API），桌面端行为零回归；补齐移动端中英双语文案
+- **安全加固**（AI 辅助、本人审校）：为应用内更新链路补上 SHA-256 完整性校验（fail-closed，防下载链路投毒）；本地服务增加跨站来源防护，杜绝浏览器恶意网页读写本地阅读记录
+- **工程质量**：自动化测试从 30 个扩充到 66 个；修复历史更新公告文件乱序损坏问题
 
-面向明日方舟玩家的本地剧情管理工具：**基于「前置关系图 × 个人阅读进度」的四级补读/续读推荐引擎**，Windows 安装包 + Android 离线 APK 双端交付，中英双语 UI。
-
-- **跨端架构**：设计「一套 React 19 + TypeScript 前端、两个原生壳」的架构（桌面 pywebview/WebView2，Android Capacitor 纯离线），Android 端通过封面重压缩把包体积从 45MB+ 优化到约 9MB
-- **零依赖后端**：用 Python 标准库实现本地 HTTP 服务（绑定 127.0.0.1），包括静态托管、REST API、端口冲突自愈、跨站请求/DNS-rebinding 防护，用户无需安装任何运行时依赖
-- **应用内自动更新**：实现 GitHub Release 检查→下载→静默升级全链路，设计「REST API → 标签 API → 公共 Atom feed」三级降级以绕开 API 限流；为无代理网络环境增加发布包 SHA-256 完整性校验（fail-closed），防止下载链路被投毒
-- **工程质量**：以 `app_info.py` 为版本单一事实源贯穿打包/运行时/更新器；66 个自动化测试（unittest + mock）覆盖更新降级、MIME 兼容、安全防护等关键回归；曾通过深度代码审查定位并修复过滤逻辑空值崩溃、更新器无校验执行等隐患
-- **发布工程**：PyInstaller onedir + Inno Setup 定制安装向导（Pillow 程序化生成品牌视觉）、可选 Authenticode 签名、日历版本号 + `APP_Ver*` 标签的可持续发版流程
-
-**技术栈**：Python 3、React 19、TypeScript、Vite、pywebview、Capacitor、PyInstaller、Inno Setup、PowerShell、GitHub Actions/CLI
+**技术栈**：React 19、TypeScript、Vite、Capacitor、Python 3、pywebview、PyInstaller、Inno Setup
 
 ### 精简版（空间紧张时用）
 
-**ArkPlots（个人开源，桌面 + Android）** — 明日方舟剧情进度管理与前置推荐工具。一套 React/TS 前端 + Python 标准库本地服务，双端交付；实现应用内自动更新（三级降级 + SHA-256 校验），66 个自动化测试，具备完整打包发版链路（PyInstaller/Inno Setup/签名）。github.com/ApodidaeDeSwift/ArkPlots
+**ArkPlots 二次开发（开源项目改造，github.com/Leslieryin/ArkPlots）** — 为开源明日方舟剧情管理工具适配 Android 纯离线版（Capacitor，包体积优化 45MB→9MB），重构数据层实现移动/桌面双端分流；参与安全加固（更新包 SHA-256 校验、本地服务跨站防护），测试 30→66。
 
 ---
 
-## 面试可能被追问的点（提前准备）
+## 面试可能被追问的点（提前准备，讲不出来的要点就删掉）
 
-1. 为什么后端不用 Flask/FastAPI？→ 免依赖、体积、启动速度；代价是自己处理了哪些细节（MIME 白名单、线程模型、优雅关停）
-2. 自动更新的三级降级怎么设计的？为什么需要？→ 大陆用户 API 403 限流的真实场景
-3. SHA-256 校验为什么 fail-closed（拉不到校验文件就拒绝安装）而不是跳过？→ 威胁模型：发布渠道被污染
-4. 66 个测试怎么组织的？举一个「修 bug 先写回归测试」的例子（date:null 崩溃）
-5. 包体积怎么从 45MB 压到 9MB？为什么桌面端不受影响（构建时才替换、原图有备份）
+1. 上游项目架构是怎样的？你的改动为什么集中在 api.ts 而不是各组件？→ 双端分流收口在数据层的理由
+2. Capacitor 离线打包和 WebView 加载远程页的区别？数据更新怎么做到应用内生效（不发版）？
+3. 封面压缩 45MB→5.5MB 用的什么参数？为什么桌面端不受影响（构建时才替换，原图有备份）？
+4. SHA-256 校验为什么 fail-closed（读不到校验文件就拒绝安装）而不是跳过？→ 威胁模型：发布渠道被污染
+5. 本地服务跨站防护怎么做的？为什么浏览器允许网页访问 localhost（potentially trustworthy origin）而你的防护有效（校验 Origin/Host）？
+6. 给别人项目提交改动和从零写项目有什么不同？→ 读代码、尊重既有约定（如 Read_record 不变量）、最小侵入式修改
