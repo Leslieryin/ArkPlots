@@ -46,7 +46,8 @@ The Web UI is embedded—you do **not** need a separate `web/dist` folder. Windo
 
 - Settings → Version → “Check for updates” scans GitHub tags matching `APP_Ver*`
 - When an installer asset is available, “Update and restart” replaces the program only—**progress is kept**
-- Updates currently use GitHub only (may need a VPN outside mainland China)
+- Downloads are verified against the release's published SHA-256 checksum whenever one is provided
+- Updates currently use GitHub only (access from mainland China may be unreliable without a VPN)
 - If SmartScreen shows **Publisher: Unknown**, the build is unsigned — see [packaging/SIGNING.md](packaging/SIGNING.md)
 
 ### About different servers
@@ -195,7 +196,7 @@ This syncs version/wizard art, builds the frontend, produces a PyInstaller **one
 - **Fresh install:** default `%LOCALAPPDATA%\ArkPlots`, optional desktop shortcut, ships initial `Plotline.json`
 - **Already installed:** confirm, then upgrade the program without deleting `Read_record.json`
 - Installer UI follows the in-app teal terminal look (not stock Inno chrome)
-- Tag `APP_Ver{VERSION}` on **APP_Release**; Actions attaches `Arkplot_setup_ver{VERSION}.exe`
+- Tag `APP_Ver{VERSION}` on **APP_Release**; Actions attaches **`Arkplot_setup_ver{VERSION}.exe`** and its **`.sha256`** checksum (build_release.py generates it after signing — upload both, the in-app updater verifies it)
 
 Code signing / SmartScreen: see [`packaging/SIGNING.md`](packaging/SIGNING.md). Set `SIGN_PFX` / `SIGN_PFX_PASSWORD` (or GitHub secrets `SIGN_PFX_BASE64` + `SIGN_PFX_PASSWORD`) before packaging. You can also [submit samples to Microsoft](https://www.microsoft.com/wdsi/filesubmission), but signing is the real fix.
 
@@ -228,4 +229,7 @@ API sketch:
 - `GET /api/version` — version / update metadata
 - `GET /api/update/check` — check newest GitHub `APP_Ver*` release
 - `POST /api/update/apply` — download installer and schedule replace/restart (packaged desktop only)
+- `POST /api/update/exit` — quit the app after update notes have been shown
 - `GET /api/health` — health check
+
+The server binds to `127.0.0.1` only and refuses requests with a foreign `Origin`/`Host` header, so web pages you visit cannot read or overwrite your local reading records.
