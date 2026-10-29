@@ -35,7 +35,7 @@ jobs:
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Require APP_Release packaging tree
         shell: bash
@@ -53,7 +53,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -124,7 +124,7 @@ jobs:
 
       - name: Upload installer artifact
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ArkPlots-setup
           path: Arkplot_setup_ver*.exe
