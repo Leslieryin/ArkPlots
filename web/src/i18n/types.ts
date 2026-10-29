@@ -103,6 +103,8 @@ export type Messages = {
     power: string
     relatedPlot: string
     operator: string
+    firstAppearance: string
+    quickView: string
     description: string
     emDash: string
   }
@@ -157,6 +159,9 @@ export type Messages = {
     showNecessary: string
     showOptional: string
     checkUpdatesOnLaunch: string
+    updateChannel: string
+    updateChannelRelease: string
+    updateChannelPreview: string
   }
   version: {
     label: string
@@ -164,6 +169,8 @@ export type Messages = {
     currentKey: string
     remoteKey: string
     current: string
+    channelRelease: string
+    channelPreview: string
     idleHint: string
     check: string
     checking: string

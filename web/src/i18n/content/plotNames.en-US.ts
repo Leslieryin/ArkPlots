@@ -126,16 +126,19 @@ export const plotNamesEnUS: Record<string, string> = {
   '120': "Unrealized Realities", // 未许之地
   '121': "Medjehtiqedti Bound", // 雅赛努斯复仇记
   '122': "First of a Thousand Autumns", // 辞岁行
-  '123': "Crossing", // 十字路口
-  '124': "People, a People", // 人们，我们
-  '125': "EP17. Critical Phase Transition", // EP17. 相变临界
-  '126': "Reclamation Algorithm: Relaunch Anchor", // 生息演算：重启锚点
-  '127': "Thunder in the Azure Dream", // 泡影苍霆
-  '128': "The Great General Strikes!", // 大将军出击！
-  '129': "Jungle Complex", // 丛林症结
-  '130': "The Black Flow of the Drowning Seekers", // 沉沦者的黑流树海
-  '131': "Till the Lands Become an Orange", // 直到大地变成一颗酸橙
-  '132': "Interactive Exhibition", // 奇象巡展
-  '133': "Sur le lac lune vivante", // 月行水上
-  '134': "Yet Another Wave", // 昨日海
+  '123': "暮岁闲谈：正是团圆时分", // 暮岁闲谈：正是团圆时分
+  '124': "Crossing", // 十字路口
+  '125': "循途漫录：王权金币", // 循途漫录：王权金币
+  '126': "People, a People", // 人们，我们
+  '127': "序言组曲：孤行之人", // 序言组曲：孤行之人
+  '128': "EP17. Critical Phase Transition", // EP17. 相变临界
+  '129': "Reclamation Algorithm: Relaunch Anchor", // 生息演算：重启锚点
+  '130': "Thunder in the Azure Dream", // 泡影苍霆
+  '131': "The Great General Strikes!", // 大将军出击！
+  '132': "Jungle Complex", // 丛林症结
+  '133': "The Black Flow of the Drowning Seekers", // 沉沦者的黑流树海
+  '134': "Till the Lands Become an Orange", // 直到大地变成一颗酸橙
+  '135': "Interactive Exhibition", // 奇象巡展
+  '136': "Sur le lac lune vivante", // 月行水上
+  '137': "Yet Another Wave", // 昨日海
 }

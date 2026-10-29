@@ -47,8 +47,8 @@ const enUS: Messages = {
     relatedPower: 'Related faction',
     relatedPlot: 'Related plot',
     status: 'Read status',
-    operator: 'Concurrent operators (substring)',
-    operatorPlaceholder: "e.g. Kal'tsit",
+    operator: 'Characters (substring)',
+    operatorPlaceholder: 'Concurrent or first appearance',
     selectedClasses: 'Selected types: {list}',
     matchAny: 'Match any',
     matchAll: 'Match all',
@@ -89,6 +89,8 @@ const enUS: Messages = {
     power: 'Faction',
     relatedPlot: 'Related plot',
     operator: 'Concurrent operators',
+    firstAppearance: 'First appearance',
+    quickView: 'Quick view',
     description: 'Description',
     emDash: '—',
   },
@@ -146,6 +148,9 @@ const enUS: Messages = {
     showNecessary: 'Show required prerequisites',
     showOptional: 'Show optional prerequisites',
     checkUpdatesOnLaunch: 'Check for updates each time the app opens',
+    updateChannel: 'Update channel',
+    updateChannelRelease: 'Stable',
+    updateChannelPreview: 'Preview',
   },
   version: {
     label: 'Version',
@@ -153,6 +158,8 @@ const enUS: Messages = {
     currentKey: 'LOCAL',
     remoteKey: 'REMOTE',
     current: 'Current version {version}',
+    channelRelease: 'Stable',
+    channelPreview: 'Preview',
     idleHint: 'Tap “Check for updates” to sync version info from GitHub Releases.',
     check: 'Check for updates',
     checking: 'Checking for updates…',
@@ -163,7 +170,7 @@ const enUS: Messages = {
     available: 'A newer version is available: {version}.',
     availableNoAsset: 'Version {version} is listed, but no installer asset was uploaded yet.',
     availableDevOnly:
-      'Version {version} is available. In development, replace the packaged exe manually.',
+      'Version {version} is available. This reply did not come from the installed app, usually because another python server.py is bound to the same port. Quit every ArkPlots window, stop that server.py, then open the installed program.',
     openRelease: 'Open release page',
     openReleaseHint: 'You can open the GitHub release page for details.',
     dataSafe: 'Updates replace only the program binary; your progress and local data stay intact.',
@@ -174,7 +181,8 @@ const enUS: Messages = {
     checkFailed: 'Update check failed.',
     applyFailed: 'Could not apply the update.',
     noAsset: 'This release has no downloadable .exe asset.',
-    devOnly: 'One-click update is only available in the packaged desktop build.',
+    devOnly:
+      'This reply is not from the installed app, so the exe cannot be replaced automatically. Stop any running python server.py, then open ArkPlots.exe from the install folder.',
     checksumMismatch:
       'Update cancelled: the downloaded installer failed its SHA-256 integrity check and was deleted. Retry later or download from the release page.',
     checksumUnavailable:
@@ -196,8 +204,8 @@ const enUS: Messages = {
   support: {
     title: 'Support us',
     open: 'Support us',
-    body: 'If ArkPlots helps you, feel free to buy the author a Mixue drink (蜜雪冰城).',
-    thanks: 'Thank you for your support.',
+    body: 'If ArkPlots helps you, feel free to buy the author a cup of coffee.',
+    thanks: 'Thank you for your support. Also, Problem feedback or other suggestions are welcomed in QQ group: 1020585333',
     imageAlt: 'Support us',
   },
 }

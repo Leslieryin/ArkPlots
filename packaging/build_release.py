@@ -35,6 +35,7 @@ if str(ROOT) not in sys.path:
 
 from app_info import (  # noqa: E402
     APP_NAME,
+    CHANNEL,
     EXE_STEM,
     GITHUB_REPO,
     VERSION,
@@ -48,13 +49,10 @@ def _run(cmd: list[str], cwd: Path) -> None:
 
 
 def sync_frontend_version() -> None:
-    path = ROOT / "web" / "src" / "version.ts"
-    content = (
-        "/** App release version — generated/synced from app_info.py by build_release.py. */\n"
-        f"export const APP_VERSION = '{VERSION}'\n"
-    )
-    path.write_text(content, encoding="utf-8", newline="\n")
-    print(f"synced {path.relative_to(ROOT)} -> {VERSION}", flush=True)
+    from sync_frontend_version import sync_frontend_version as write_version_ts
+
+    path = write_version_ts()
+    print(f"synced {path.relative_to(ROOT)} -> {VERSION} {CHANNEL}", flush=True)
 
 
 def build_web() -> None:

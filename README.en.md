@@ -12,9 +12,11 @@ A local tool for browsing, filtering, and tracking *Arknights* story entries (Ma
 
 If you find it useful, a ⭐ on GitHub is always appreciated.
 
+Problem feedback or other suggestions are welcomed in QQ group: `1020585333`
+
 ### After you download
 
-1. Open [GitHub Releases](https://github.com/ApodidaeDeSwift/ArkPlots/releases) and download the latest **`Arkplot_setup_ver*.exe`** installer (tags look like `APP_Ver…`).
+1. Open [GitHub Releases](https://github.com/ApodidaeDeSwift/ArkPlots/releases) and download the latest `Arkplot_setup_ver*.exe` installer (tags look like `APP_Ver…`).
 2. Run the installer. Default path is `%LOCALAPPDATA%\ArkPlots` (changeable); optional desktop shortcut. A fresh install ships `Plotline.json`.
 3. Launch from the Start menu or desktop shortcut. A native window titled **ArkPlots** opens (about 1400×900, resizable). There is **no** console window.
 4. Closing the window exits the app. Progress is saved as `Read_record.json` in the install folder (upgrades do **not** wipe it).
@@ -44,8 +46,7 @@ The Web UI is embedded—you do **not** need a separate `web/dist` folder. Windo
 
 - Settings → Version → “Check for updates” scans GitHub tags matching `APP_Ver*`
 - When an installer asset is available, “Update and restart” replaces the program only—**progress is kept**
-- Downloads are verified against the release's published SHA-256 checksum whenever one is provided
-- Updates currently use GitHub only (access from mainland China may be unreliable without a VPN)
+- Updates currently use GitHub only (may need a VPN outside mainland China)
 - If SmartScreen shows **Publisher: Unknown**, the build is unsigned — see [packaging/SIGNING.md](packaging/SIGNING.md)
 
 ### About different servers
@@ -55,12 +56,22 @@ Dates currently follow the **CN (Mainland China) server**, and recommended video
 ### Author & support
 
 - GitHub: [@ApodidaeDeSwift](https://github.com/ApodidaeDeSwift)
-- WeChat: `Quantumaster233` · QQ: `3195582616`
+- WeChat: `Quantumaster233`
+- QQ: `3195582616`
 - Bilibili: [space.bilibili.com/281039105](https://space.bilibili.com/281039105)
+- Feedback in QQ group: `1020585333`
 
 If ArkPlots helps you, feel free to buy the author a cup of coffee—the same page is also available from in-app Settings:
 
 ![Support](coffee.png)
+
+### Urgent Help Needed!
+
+The development of the following content has hit some serious obstacles. We need more sources of information and are asking for help from all fellow players!
+
+- For each operator’s secret record, a list of the prerequisite storylines that need to be read beforehand, along with reasons for reading them (including must-read storylines and optional ones)
+- Various i18n translations (English, Japanese, etc. If any foreign friends are willing to help, we’d be really grateful!)
+- Corrections for some current storyline arcs (even the developer hasn’t seen all the storylines; these prerequisite clues are arranged based on my own understanding, so if there are any mistakes or omissions, please point them out, thanks!)
 
 ### License & disclaimer
 
@@ -184,7 +195,7 @@ This syncs version/wizard art, builds the frontend, produces a PyInstaller **one
 - **Fresh install:** default `%LOCALAPPDATA%\ArkPlots`, optional desktop shortcut, ships initial `Plotline.json`
 - **Already installed:** confirm, then upgrade the program without deleting `Read_record.json`
 - Installer UI follows the in-app teal terminal look (not stock Inno chrome)
-- Tag `APP_Ver{VERSION}` on **APP_Release**; Actions attaches **`Arkplot_setup_ver{VERSION}.exe`** and its **`.sha256`** checksum (build_release.py generates it after signing — upload both, the in-app updater verifies it)
+- Tag `APP_Ver{VERSION}` on **APP_Release**; Actions attaches `Arkplot_setup_ver{VERSION}.exe`
 
 Code signing / SmartScreen: see [`packaging/SIGNING.md`](packaging/SIGNING.md). Set `SIGN_PFX` / `SIGN_PFX_PASSWORD` (or GitHub secrets `SIGN_PFX_BASE64` + `SIGN_PFX_PASSWORD`) before packaging. You can also [submit samples to Microsoft](https://www.microsoft.com/wdsi/filesubmission), but signing is the real fix.
 
@@ -217,7 +228,4 @@ API sketch:
 - `GET /api/version` — version / update metadata
 - `GET /api/update/check` — check newest GitHub `APP_Ver*` release
 - `POST /api/update/apply` — download installer and schedule replace/restart (packaged desktop only)
-- `POST /api/update/exit` — quit the app after update notes have been shown
 - `GET /api/health` — health check
-
-The server binds to `127.0.0.1` only and refuses requests with a foreign `Origin`/`Host` header, so web pages you visit cannot read or overwrite your local reading records.

@@ -12,9 +12,11 @@
 
 喜欢的话，欢迎在右上角点一颗 ⭐。
 
+反馈问题欢迎加QQ群：`1020585333`
+
 ### 下载后怎么用
 
-1. 打开 [GitHub Releases](https://github.com/ApodidaeDeSwift/ArkPlots/releases)，下载最新 **`Arkplot_setup_ver*.exe`** 安装包（标签形如 `APP_Ver…`）。
+1. 打开 [GitHub Releases](https://github.com/ApodidaeDeSwift/ArkPlots/releases)，下载最新 `Arkplot_setup_ver*.exe` 安装包（标签形如 `APP_Ver…`）。
 2. 运行安装程序：默认装到 `%LOCALAPPDATA%\ArkPlots`，可改路径，可选桌面快捷方式。首次安装会写入剧情数据 `Plotline.json`。
 3. 从开始菜单或桌面快捷方式启动，打开标题为 **ArkPlots** 的独立窗口（约 1400×900，可调大小）。**不会**弹出命令行黑框。
 4. 关闭窗口即退出；阅读进度保存在安装目录下的 `Read_record.json`（升级程序时不会被清空）。
@@ -54,12 +56,22 @@ Web 界面已打进程序，旁边**不需要**再放 `web/dist`。Windows 一�
 ### 作者与支持
 
 - GitHub：[@ApodidaeDeSwift](https://github.com/ApodidaeDeSwift)
-- 微信：`Quantumaster233` · QQ：`3195582616`
+- 微信：`Quantumaster233` 
+- QQ：`3195582616`
 - B站：[space.bilibili.com/281039105](https://space.bilibili.com/281039105)
+- QQ反馈群：`1020585333`
 
 如果本工具对你有帮助，请作者喝一杯蜜雪冰城（应用内设置也可打开同一页）：
 
 ![支持我们](coffee.png)
+
+### 急需帮助！
+
+以下内容的开发现阶段遇到了很严重的障碍。我们需要更多的信息来源，请求广大舟友的帮助！
+
+- 各个干员密录在阅读前所需要读完的前置剧情及其阅读理由（包含必读剧情和可选剧情）
+- 各类i18n（英文、日语等。如果有愿意提供任何帮助的外国友人，感激不尽！）
+- 现阶段部分剧情线的订正（开发者本人也并非看过所有剧情，这些前置线索是基于我个人的理解编排的，如有错漏，还请指出，谢谢！）
 
 ### 许可与声明
 
@@ -170,7 +182,7 @@ npm run dev
 
 ### 打包安装包（无命令行窗口）
 
-版本号写在仓库根目录的 `app_info.py`（`VERSION`）。需要 [Inno Setup 6](https://jrsoftware.org/isinfo.php)（`ISCC.exe`）。一键打包：
+版本号和发布通道写在仓库根目录的 `app_info.py`（`VERSION`、`CHANNEL`）。前端版本文件会在构建时自动生成。需要 [Inno Setup 6](https://jrsoftware.org/isinfo.php)（`ISCC.exe`）。一键打包：
 
 ```bash
 pip install -r requirements.txt pyinstaller pillow
@@ -186,7 +198,7 @@ python packaging/build_release.py
 - **已安装**：确认后只更新程序；`Read_record.json` 等用户数据不会被删除
 - 安装向导 UI 与应用内风格对齐（青蓝终端主题，非 Inno 默认皮肤）
 
-发布桌面版时请在 **APP_Release** 分支打 tag `APP_Ver{VERSION}`。GitHub Actions 会构建并把 **`Arkplot_setup_ver{VERSION}.exe`** 挂到对应 Release（不要只发裸 exe）。
+发布桌面版时请在 **APP_Release** 分支打 tag `APP_Ver{VERSION}`。GitHub Actions 会构建并把 `Arkplot_setup_ver{VERSION}.exe` 挂到对应 Release（不要只发裸 exe）。
 
 代码签名与 SmartScreen：见 [`packaging/SIGNING.md`](packaging/SIGNING.md)（可选 `SIGN_PFX` / GitHub secrets）。亦可向 [Microsoft 安全智能](https://www.microsoft.com/wdsi/filesubmission) 提交样本，但不如签名彻底。
 
@@ -200,7 +212,7 @@ ArkPlots/
 ├── requirements.txt       # pywebview 等
 ├── server.py              # 本地 HTTP API + 静态资源
 ├── updater.py             # 应用内更新（扫描 APP_Ver*）
-├── app_info.py            # 版本号 / 更新元数据
+├── app_info.py            # 版本号、正式版/测试版、更新元数据
 ├── packaging/ArkPlots.spec # PyInstaller（onedir，console=False）
 ├── packaging/ArkPlots.iss  # Inno Setup 安装包
 ├── packaging/build_release.py

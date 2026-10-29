@@ -35,6 +35,7 @@ from app_info import (
     GITHUB_REPO,
     UPDATE_TAG_PREFIX,
     VERSION,
+    is_packaged,
     release_exe_name,
     release_setup_name,
     version_payload,
@@ -242,15 +243,72 @@ def _releases_from_public_feed() -> list[tuple[str, tuple[int, ...], dict[str, A
     return found
 
 
-def _latest_from_public_feed() -> tuple[str, tuple[int, ...], dict[str, Any]] | None:
-    """Newest public ``APP_Ver*`` release, or None if the feed cannot be read."""
+def _stable_release_tag() -> str | None:
+    """Tag of GitHub's latest non-prerelease, from the ``/releases/latest`` redirect."""
+    url = f"https://github.com/{GITHUB_REPO}/releases/latest"
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": _USER_AGENT, "Accept": "text/html, */*;q=0.8"},
+    )
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        final = resp.geturl()
+    marker = "/releases/tag/"
+    if marker not in final:
+        return None
+    tag = unquote(final.split(marker, 1)[1].split("/", 1)[0].split("?", 1)[0].strip())
+    if parse_app_ver_tag(tag) is None:
+        return None
+    return tag
+
+
+def _latest_from_public_feed(
+    include_prerelease: bool = False,
+) -> tuple[str, tuple[int, ...], dict[str, Any]] | None:
+    """Newest public ``APP_Ver*`` release, or None if the feed cannot be read.
+
+    ``include_prerelease`` False follows GitHub's latest stable release.
+    True uses the highest ``APP_Ver*`` entry in the public feed, pre-releases
+    included.
+    """
     try:
         found = _releases_from_public_feed()
     except Exception:
         return None
     if not found:
         return None
-    tag_name, remote, release = max(found, key=lambda item: item[1])
+    if include_prerelease:
+        chosen = max(found, key=lambda item: item[1])
+    else:
+        try:
+            stable_tag = _stable_release_tag()
+        except Exception:
+            return None
+        if not stable_tag:
+            return None
+        matched = [item for item in found if item[0] == stable_tag]
+        if matched:
+            chosen = matched[0]
+        else:
+            ver = parse_app_ver_tag(stable_tag)
+            if ver is None:
+                return None
+            chosen = (
+                stable_tag,
+                ver,
+                {
+                    "tag_name": stable_tag,
+                    "name": stable_tag,
+                    "body": "",
+                    "html_url": (
+                        f"https://github.com/{GITHUB_REPO}/releases/tag/"
+                        f"{quote(stable_tag, safe='')}"
+                    ),
+                    "draft": False,
+                    "prerelease": False,
+                    "assets": [],
+                },
+            )
+    tag_name, remote, release = chosen
     try:
         release["assets"] = _assets_from_expanded_page(tag_name)
     except Exception:
@@ -273,6 +331,8 @@ def _list_app_ver_from_releases(
                 continue
             if item.get("draft"):
                 continue
+            # Pre-release filtering happens in check_for_update so a caller
+            # can ask for 测试版 (include) or 正式版 (skip) from the same list.
             tag = str(item.get("tag_name") or "")
             ver = parse_app_ver_tag(tag)
             if ver is not None:
@@ -455,13 +515,22 @@ def update_markdown_path() -> str | None:
     return None
 
 
+_VERSION_MARK = "{{VERSION}}"
+
+
+def render_update_markdown(text: str, version: str | None = None) -> str:
+    """Fill ``{{VERSION}}`` so Update.md does not store the version number."""
+    ver = (version or VERSION).strip()
+    return text.replace(_VERSION_MARK, ver)
+
+
 def read_local_update_markdown() -> str:
     path = update_markdown_path()
     if not path:
         return ""
     try:
         with open(path, encoding="utf-8") as handle:
-            return _clip_notes(handle.read())
+            return _clip_notes(render_update_markdown(handle.read()))
     except OSError:
         return ""
 
@@ -484,7 +553,10 @@ def fetch_tagged_update_markdown(tag_name: str | None) -> str:
             raw = resp.read()
     except Exception:
         return ""
-    return _clip_notes(raw.decode("utf-8", errors="replace"))
+    text = raw.decode("utf-8", errors="replace")
+    parsed = parse_version(tag)
+    version = ".".join(str(part) for part in parsed) if parsed else None
+    return _clip_notes(render_update_markdown(text, version))
 
 
 def update_announcement(tag_name: str | None = None) -> str:
@@ -508,8 +580,46 @@ def _base_error(error: str, message: str, **extra: Any) -> dict[str, Any]:
     }
 
 
-def check_for_update() -> dict[str, Any]:
-    """Find the newest ``APP_Ver*`` tag/release and compare with local VERSION."""
+def _accept_release(release: dict[str, Any], include_prerelease: bool) -> bool:
+    """正式版 skips GitHub Pre-release. 测试版 keeps both."""
+    if release.get("draft"):
+        return False
+    if release.get("prerelease") and not include_prerelease:
+        return False
+    return True
+
+
+def _no_release_in_channel(include_prerelease: bool) -> dict[str, Any]:
+    channel = "preview" if include_prerelease else "release"
+    return {
+        "ok": True,
+        "update_available": False,
+        "up_to_date": True,
+        "current_version": VERSION,
+        "remote_version": VERSION,
+        "remote_tag": "",
+        "remote_name": "",
+        "asset_name": None,
+        "asset_url": None,
+        "asset_size": None,
+        "asset_sha256_url": None,
+        "has_asset": False,
+        "html_url": RELEASES_HTML_URL,
+        "release_notes": "",
+        "channel": channel,
+        "warning": OVERSEAS_SOURCE_WARNING_ZH,
+        "warning_en": OVERSEAS_SOURCE_WARNING_EN,
+        "frozen": is_packaged(),
+    }
+
+
+def check_for_update(*, include_prerelease: bool = False) -> dict[str, Any]:
+    """Find the newest ``APP_Ver*`` release and compare with local VERSION.
+
+    ``include_prerelease`` False is 正式版: ignore GitHub releases marked
+    Pre-release. True is 测试版: a pre-release can win when its version is
+    higher. A newer stable release is still offered on the test channel.
+    """
     local = parse_version(VERSION)
     if local is None:
         return _base_error("invalid_local_version", f"Local version is invalid: {VERSION}")
@@ -517,11 +627,19 @@ def check_for_update() -> dict[str, Any]:
     release: dict[str, Any] | None = None
     tag_name = ""
     remote: tuple[int, ...] | None = None
+    channel = "preview" if include_prerelease else "release"
 
     try:
         from_releases = _list_app_ver_from_releases()
-        if from_releases:
-            tag_name, remote, release = max(from_releases, key=lambda item: item[1])
+        usable = [
+            item
+            for item in from_releases
+            if _accept_release(item[2], include_prerelease)
+        ]
+        if usable:
+            tag_name, remote, release = max(usable, key=lambda item: item[1])
+        elif from_releases:
+            return _no_release_in_channel(include_prerelease)
         else:
             # Fallback: tags may exist before a Release is published.
             tags = _list_app_ver_tags()
@@ -538,14 +656,16 @@ def check_for_update() -> dict[str, Any]:
                 if exc.code != 404:
                     raise
                 release = None
+            if release is not None and not _accept_release(release, include_prerelease):
+                return _no_release_in_channel(include_prerelease)
     except urllib.error.HTTPError as exc:
-        fallback = _latest_from_public_feed()
+        fallback = _latest_from_public_feed(include_prerelease)
         exc.close()
         if fallback is None:
             return _base_error("http_error", f"GitHub HTTP {exc.code}")
         tag_name, remote, release = fallback
     except Exception as exc:
-        fallback = _latest_from_public_feed()
+        fallback = _latest_from_public_feed(include_prerelease)
         if fallback is None:
             return _base_error("network_error", str(exc))
         tag_name, remote, release = fallback
@@ -575,7 +695,8 @@ def check_for_update() -> dict[str, Any]:
             "release_notes": "",
             "warning": OVERSEAS_SOURCE_WARNING_ZH,
             "warning_en": OVERSEAS_SOURCE_WARNING_EN,
-            "frozen": bool(getattr(sys, "frozen", False)),
+            "channel": channel,
+            "frozen": is_packaged(),
             "error": "no_release",
             "message": f"Tag {tag_name} has no GitHub Release yet",
         }
@@ -599,20 +720,21 @@ def check_for_update() -> dict[str, Any]:
         "has_asset": asset is not None,
         "html_url": release.get("html_url") or html_fallback,
         "release_notes": _release_notes_text(release),
+        "channel": channel,
         "warning": OVERSEAS_SOURCE_WARNING_ZH,
         "warning_en": OVERSEAS_SOURCE_WARNING_EN,
-        "frozen": bool(getattr(sys, "frozen", False)),
+        "frozen": is_packaged(),
     }
 
 
 def _app_dir() -> str:
-    if getattr(sys, "frozen", False):
+    if is_packaged():
         return os.path.dirname(os.path.abspath(sys.executable))
     return os.path.dirname(os.path.abspath(__file__))
 
 
 def _running_exe_path() -> str | None:
-    if getattr(sys, "frozen", False):
+    if is_packaged():
         return os.path.abspath(sys.executable)
     return None
 
@@ -843,53 +965,61 @@ foreach ($control in @($form, $cardBox, $kicker, $title, $status, $detail, $vers
   }})
 }}
 
+function Invoke-ArkUpdate {{
+  # Stay on the UI thread. A BackgroundWorker script block runs on a pool
+  # thread with no PowerShell runspace and fails before the installer starts
+  # ("There is no Runspace available to run scripts in this thread.").
+  $status.Text = '正在关闭当前窗口…'
+  [System.Windows.Forms.Application]::DoEvents()
+  while ($true) {{
+    try {{
+      $null = Get-Process -Id $pidWait -ErrorAction Stop
+    }} catch {{
+      break
+    }}
+    Start-Sleep -Milliseconds 200
+    [System.Windows.Forms.Application]::DoEvents()
+  }}
+  Start-Sleep -Milliseconds 800
+  $status.Text = '正在写入新版本…'
+  [System.Windows.Forms.Application]::DoEvents()
+  $setupArgs = @('/VERYSILENT', '/NORESTART', '/CLOSEAPPLICATIONS', "/DIR=`"$appDir`"")
+  $proc = Start-Process -FilePath $setup -ArgumentList $setupArgs -PassThru
+  while (-not $proc.HasExited) {{
+    Start-Sleep -Milliseconds 200
+    [System.Windows.Forms.Application]::DoEvents()
+  }}
+  $proc.Refresh()
+  if ($proc.ExitCode -ne 0) {{
+    throw "安装程序退出码 $($proc.ExitCode)"
+  }}
+  $status.Text = '更新完成，正在打开…'
+  [System.Windows.Forms.Application]::DoEvents()
+  Start-Sleep -Milliseconds 500
+{restart_line}  try {{ Remove-Item -LiteralPath $setup -Force -ErrorAction SilentlyContinue }} catch {{ }}
+}}
+
 $form.Add_Shown({{
+  if ($script:updateStarted) {{ return }}
+  $script:updateStarted = $true
   [ArkChrome]::Round($versionChip, 10)
   $form.Activate()
   $timer.Start()
-  $worker = New-Object System.ComponentModel.BackgroundWorker
-  $worker.WorkerReportsProgress = $true
-  $worker.Add_DoWork({{
-    param($sender, $e)
-    $sender.ReportProgress(0, '正在关闭当前窗口…')
-    while ($true) {{
-      try {{
-        $null = Get-Process -Id $pidWait -ErrorAction Stop
-      }} catch {{ break }}
-      Start-Sleep -Milliseconds 400
-    }}
-    Start-Sleep -Milliseconds 800
-    $sender.ReportProgress(0, '正在写入新版本…')
-    $setupArgs = @('/VERYSILENT', '/NORESTART', '/CLOSEAPPLICATIONS', "/DIR=`"$appDir`"")
-    $proc = Start-Process -FilePath $setup -ArgumentList $setupArgs -Wait -PassThru
-    if ($proc.ExitCode -ne 0) {{
-      throw "安装程序退出码 $($proc.ExitCode)"
-    }}
-    $sender.ReportProgress(0, '更新完成，正在打开…')
-    Start-Sleep -Milliseconds 500
-{restart_line}    try {{ Remove-Item -LiteralPath $setup -Force -ErrorAction SilentlyContinue }} catch {{ }}
-  }})
-  $worker.Add_ProgressChanged({{
-    param($sender, $e)
-    $status.Text = [string]$e.UserState
-  }})
-  $worker.Add_RunWorkerCompleted({{
-    param($sender, $e)
+  try {{
+    Invoke-ArkUpdate
     $timer.Stop()
-    if ($e.Error) {{
-      $status.Text = '更新没有完成'
-      $detail.Text = $e.Error.Message
-      $detail.ForeColor = $danger
-      $detail.Location = New-Object System.Drawing.Point(28, 184)
-      $detail.Size = New-Object System.Drawing.Size(432, 36)
-      $trackBar.Visible = $false
-      $closeBtn.Visible = $true
-      $form.TopMost = $false
-    }} else {{
-      $form.Close()
-    }}
-  }})
-  $worker.RunWorkerAsync()
+    $form.Close()
+  }} catch {{
+    $timer.Stop()
+    $status.Text = '更新没有完成'
+    $detail.Text = $_.Exception.Message
+    $detail.ForeColor = $danger
+    $detail.Location = New-Object System.Drawing.Point(28, 184)
+    $detail.Size = New-Object System.Drawing.Size(432, 36)
+    $trackBar.Visible = $false
+    $closeBtn.Visible = $true
+    $form.TopMost = $false
+  }}
 }})
 
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -968,19 +1098,37 @@ def _write_windows_swapper(
     return bat_path
 
 
+_before_process_exit: list[Any] = []
+
+
+def register_before_process_exit(callback: Any) -> None:
+    """Run while the process is still alive, before an update calls ``os._exit``."""
+    if callback not in _before_process_exit:
+        _before_process_exit.append(callback)
+
+
+def _close_webview_windows() -> None:
+    try:
+        import webview
+
+        for win in list(getattr(webview, "windows", []) or []):
+            try:
+                win.destroy()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
 def _schedule_process_exit(delay: float = 1.2) -> None:
     def _exit() -> None:
         time.sleep(delay)
-        try:
-            import webview
-
-            for win in list(getattr(webview, "windows", []) or []):
-                try:
-                    win.destroy()
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        for callback in list(_before_process_exit):
+            try:
+                callback()
+            except Exception:
+                pass
+        _close_webview_windows()
         os._exit(0)
 
     threading.Thread(target=_exit, name="arkplots-update-exit", daemon=True).start()
@@ -1000,14 +1148,51 @@ def request_update_exit() -> dict[str, Any]:
     return {"ok": True, "will_restart": True}
 
 
-def apply_update(*, restart: bool = True, defer_exit: bool = False) -> dict[str, Any]:
+def _helper_creationflags() -> int:
+    """Process flags for the program that applies an update after we exit.
+
+    ``DETACHED_PROCESS`` is intentionally absent. With that flag, Windows
+    PowerShell returns exit code 0 without executing ``-File``, so the
+    installer never runs.
+    """
+    flags = 0
+    if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
+        flags |= subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
+    # 0x01000000 — present as a constant on Windows CPython.
+    flags |= getattr(subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0x01000000)
+    # 0x08000000 — hide the console. A WinForms window is unaffected.
+    flags |= getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+    detached = getattr(subprocess, "DETACHED_PROCESS", 0)
+    if detached:
+        flags &= ~detached
+    return flags
+
+
+def _open_helper_log(update_dir: str):
+    """Overwrite the helper log. Callers close the handle after ``Popen``."""
+    path = os.path.join(update_dir, "apply_update.log")
+    try:
+        handle = open(path, "w", encoding="utf-8")
+    except OSError:
+        return subprocess.DEVNULL
+    handle.write("launch helper\n")
+    handle.flush()
+    return handle
+
+
+def apply_update(
+    *,
+    restart: bool = True,
+    defer_exit: bool = False,
+    include_prerelease: bool = False,
+) -> dict[str, Any]:
     """Download the remote exe and schedule a safe replace of the running binary.
 
     When ``defer_exit`` is true, the process stays up until ``request_update_exit``
     so the UI can show this version's release notes before restarting.
     """
     global _update_exit_armed
-    check = check_for_update()
+    check = check_for_update(include_prerelease=include_prerelease)
     if not check.get("ok"):
         return check
     if not check.get("update_available"):
@@ -1094,11 +1279,11 @@ def apply_update(*, restart: bool = True, defer_exit: bool = False) -> dict[str,
                 "warning_en": OVERSEAS_SOURCE_WARNING_EN,
             }
 
-    creationflags = 0
-    if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
-        creationflags |= subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
-    if hasattr(subprocess, "DETACHED_PROCESS"):
-        creationflags |= subprocess.DETACHED_PROCESS  # type: ignore[attr-defined]
+    # DETACHED_PROCESS makes Windows PowerShell exit 0 without running -File,
+    # so the installer never starts and the app only closes. CREATE_NO_WINDOW
+    # hides the console host; the WinForms progress window still appears.
+    # Breakaway keeps the helper alive after this process calls os._exit.
+    creationflags = _helper_creationflags()
 
     if _asset_is_installer(asset_name):
         ui_script = _write_installer_runner(
@@ -1109,26 +1294,30 @@ def apply_update(*, restart: bool = True, defer_exit: bool = False) -> dict[str,
             restart=restart,
             remote_version=str(check.get("remote_version") or ""),
         )
-        # Hidden PowerShell host; WinForms UI is shown by the script itself.
-        # Do NOT use CREATE_NO_WINDOW — it can suppress the GUI on some hosts.
-        subprocess.Popen(
-            [
-                "powershell.exe",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-WindowStyle",
-                "Hidden",
-                "-File",
-                ui_script,
-            ],
-            cwd=update_dir,
-            close_fds=True,
-            creationflags=creationflags,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-        )
+        # Hidden console host; WinForms UI is shown by the script itself.
+        log_handle = _open_helper_log(update_dir)
+        try:
+            subprocess.Popen(
+                [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-WindowStyle",
+                    "Hidden",
+                    "-File",
+                    ui_script,
+                ],
+                cwd=update_dir,
+                close_fds=True,
+                creationflags=creationflags,
+                stdout=log_handle,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+            )
+        finally:
+            if log_handle is not subprocess.DEVNULL:
+                log_handle.close()
         note = "Installer upgrades the program only; Read_record.json is not modified."
     else:
         stable_twin = os.path.join(app_dir, f"{EXE_STEM}.exe")
@@ -1140,16 +1329,20 @@ def apply_update(*, restart: bool = True, defer_exit: bool = False) -> dict[str,
             optional_stable=optional_stable,
             restart=restart,
         )
-        no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-        subprocess.Popen(
-            ["cmd.exe", "/c", bat],
-            cwd=update_dir,
-            close_fds=True,
-            creationflags=creationflags | no_window,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-        )
+        log_handle = _open_helper_log(update_dir)
+        try:
+            subprocess.Popen(
+                ["cmd.exe", "/c", bat],
+                cwd=update_dir,
+                close_fds=True,
+                creationflags=creationflags,
+                stdout=log_handle,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+            )
+        finally:
+            if log_handle is not subprocess.DEVNULL:
+                log_handle.close()
         note = "User data files are not modified; only the executable is replaced."
 
     if defer_exit:
