@@ -43,9 +43,9 @@ export type PlotItem = {
   /** Relative path under site root, e.g. covers/12.png — optional; prefer covers.json */
   cover?: string
   image?: string
-  Videos?: VideoEntry[] | Record<string, string> | string
-  videos?: VideoEntry[] | Record<string, string> | string
-  Video?: VideoEntry[] | Record<string, string> | string
+  Videos?: VideoEntry[] | string[] | Record<string, string> | string
+  videos?: VideoEntry[] | string[] | Record<string, string> | string
+  Video?: VideoEntry[] | string[] | Record<string, string> | string
 }
 
 export type PlotlineFile = {

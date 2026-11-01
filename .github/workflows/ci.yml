@@ -19,3 +19,25 @@ jobs:
         env:
           PYTHONUTF8: '1'   # windows runner 的 stdout 默认 cp1252，错误路径里的中文 print 会炸
         run: python -m unittest discover -s tests -v
+
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # vitest.config.ts 加载时会调用 python 生成 web/src/version.ts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: 运行前端测试（vitest）
+        working-directory: web
+        run: |
+          npm ci
+          npm test

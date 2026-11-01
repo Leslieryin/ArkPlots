@@ -17,7 +17,8 @@ ArkPlots/
 ├── Plotline.json      剧情数据（134 条，安装包自带，随版本更新）
 ├── Read_record.json   用户阅读进度（★ 绝不删除/清空，缺的 id 只补「未读」）
 ├── web/               React 19 + Vite + TypeScript 前端（桌面与安卓共用）
-│   └── src/api.ts     IS_NATIVE_APP 分流：Capacitor 走本地实现，桌面走 HTTP API
+│   ├── src/api.ts     IS_NATIVE_APP 分流：Capacitor 走本地实现，桌面走 HTTP API
+│   └── tests/         vitest 纯逻辑测试（filter/recommend/types/api/settings/viewLink/i18n）
 ├── packaging/         PyInstaller onedir → Inno Setup 安装包；build_release.py 一键构建
 └── tests/             unittest（无 pytest 依赖），86 项测试
 ```
@@ -36,6 +37,7 @@ py server.py --no-browser     # 只起服务（配合 web: npm run dev 代理）
 cd web && npm install && npm run build    # 产出 web/dist（server.py 托管它）
 cd web && npm run dev                    # 开发热更（代理到本地 API）
 cd web && npm run lint                   # oxlint
+cd web && npm test                       # vitest 前端纯逻辑测试（web/tests/）
 
 # 测试（跑全部；改完任何 .py 必须跑）
 py -m unittest discover -s tests
@@ -60,6 +62,7 @@ py packaging/build_release.py             # 加 --skip-web 复用已有 web/dist
 - Python：类型标注（`from __future__ import annotations`）、中文注释/中英双语用户可见文案（该项目受众双语）。
 - 测试用 **unittest + unittest.mock.patch**（不要引入 pytest 依赖）；网络一律 mock（现有测试示范了 `_list_app_ver_from_releases` / `urlopen` 的 mock 方式）；涉及 HTTP 端点的测试用 `_bind_server(0)` 拿随机端口真实起服务。
 - 前端：oxlint；组件放 `web/src/components/`，文案进 `web/src/i18n/`（zh-CN / en-US 双份都要加）。
+- 前端测试：**vitest**（`web/tests/`，node 环境，stub fetch/localStorage，不渲染组件；组件测试待补，需 jsdom + @testing-library/react）。`npm test` 经 `vitest.config.ts` 加载时会先跑 `sync_frontend_version.py` 生成 `src/version.ts`（与 build 行为一致，因此 CI 需要装 Python）。
 
 ## 发版流程（摘要）
 
