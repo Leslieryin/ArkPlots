@@ -19,7 +19,7 @@ ArkPlots/
 ├── web/               React 19 + Vite + TypeScript 前端（桌面与安卓共用）
 │   └── src/api.ts     IS_NATIVE_APP 分流：Capacitor 走本地实现，桌面走 HTTP API
 ├── packaging/         PyInstaller onedir → Inno Setup 安装包；build_release.py 一键构建
-└── tests/             unittest（无 pytest 依赖），30+ 用例
+└── tests/             unittest（无 pytest 依赖），86 项测试
 ```
 
 **数据流**：UI（web/dist）→ `127.0.0.1:8765` 本地 API（`/api/plots` `/api/records` `/api/version` `/api/update/*` `/api/health`）→ 直接读写 EXE 旁边的 JSON 文件。

@@ -88,7 +88,7 @@ Web 界面已打进程序，旁边**不需要**再放 `web/dist`。Windows 一�
 | 用途 | 依赖 |
 | --- | --- |
 | 独立窗口（默认） | Python 3.10+，[pywebview](https://pywebview.flowrl.com/)（`pip install -r requirements.txt`）；Windows 用系统 Edge WebView2 |
-| 构建前端 | [Node.js](https://nodejs.org/) 18+（含 npm） |
+| 构建前端 | [Node.js](https://nodejs.org/) 20.19+ 或 22.12+（vite 8 的 engines 要求；含 npm） |
 | 可选：系统浏览器 | `python main.py --browser` |
 | 可选：旧版桌面 UI | tkinter（多数 Python 自带），`python main.py --tk` |
 
@@ -185,7 +185,7 @@ npm run dev
 版本号和发布通道写在仓库根目录的 `app_info.py`（`VERSION`、`CHANNEL`）。前端版本文件会在构建时自动生成。需要 [Inno Setup 6](https://jrsoftware.org/isinfo.php)（`ISCC.exe`）。一键打包：
 
 ```bash
-pip install -r requirements.txt pyinstaller pillow
+pip install -r requirements.txt pyinstaller pillow pythonnet
 cd web && npm install && cd ..
 python packaging/build_release.py
 ```

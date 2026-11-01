@@ -339,7 +339,7 @@ class ArkPlotsHandler(SimpleHTTPRequestHandler):
         # map / to index.html; try file first
         rel = path.lstrip("/") or "index.html"
         candidate = os.path.normpath(os.path.join(STATIC_DIR, rel))
-        if not candidate.startswith(os.path.normpath(STATIC_DIR)):
+        if not candidate.startswith(os.path.normpath(STATIC_DIR) + os.sep):
             self.send_error(403)
             return
         if os.path.isdir(candidate):

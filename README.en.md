@@ -89,7 +89,7 @@ For running from source, editing the frontend / data, or rebuilding the installe
 | Purpose | Dependency |
 | --- | --- |
 | Standalone window (default) | Python 3.10+ and [pywebview](https://pywebview.flowrl.com/) (`pip install -r requirements.txt`); Windows uses Edge WebView2 |
-| Frontend build | [Node.js](https://nodejs.org/) 18+ (with npm) |
+| Frontend build | [Node.js](https://nodejs.org/) 20.19+ or 22.12+ (vite 8 engines requirement; with npm) |
 | Optional: system browser | `python main.py --browser` |
 | Optional: legacy desktop UI | tkinter (usually bundled with Python), `python main.py --tk` |
 
@@ -186,7 +186,7 @@ To add a language: add a pack under `locales/` → register in `localeRegistry` 
 Bump `VERSION` in root `app_info.py`. Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`ISCC.exe`), then:
 
 ```bash
-pip install -r requirements.txt pyinstaller pillow
+pip install -r requirements.txt pyinstaller pillow pythonnet
 cd web && npm install && cd ..
 python packaging/build_release.py
 ```
