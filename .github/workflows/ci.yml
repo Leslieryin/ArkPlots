@@ -16,4 +16,6 @@ jobs:
           python-version: '3.11'
 
       - name: 运行全部单元测试（86 项，纯标准库无需装依赖）
+        env:
+          PYTHONUTF8: '1'   # windows runner 的 stdout 默认 cp1252，错误路径里的中文 print 会炸
         run: python -m unittest discover -s tests -v
