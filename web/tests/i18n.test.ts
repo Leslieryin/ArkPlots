@@ -37,19 +37,44 @@ describe('statusLabelKey', () => {
 })
 
 describe('locale registry', () => {
-  it('registers zh-CN and en-US with non-empty native names', () => {
-    expect(listLocales().map((l) => l.code)).toEqual(['zh-CN', 'en-US'])
+  it('registers zh-CN, en-US and ja-JP with non-empty native names', () => {
+    expect(listLocales().map((l) => l.code)).toEqual(['zh-CN', 'en-US', 'ja-JP'])
     expect(localeRegistry['zh-CN'].meta.nativeName).toBe('简体中文')
     expect(localeRegistry['en-US'].meta.nativeName.length).toBeGreaterThan(0)
+    expect(localeRegistry['ja-JP'].meta.nativeName).toBe('日本語')
   })
 
   it('falls back to zh-CN for unknown or missing locale codes', () => {
     expect(DEFAULT_LOCALE).toBe('zh-CN')
     expect(resolveLocale('en-US')).toBe('en-US')
+    expect(resolveLocale('ja-JP')).toBe('ja-JP')
     expect(resolveLocale('ZH-cn')).toBe('zh-CN')
     expect(resolveLocale('fr-FR')).toBe('zh-CN')
     expect(resolveLocale(null)).toBe('zh-CN')
     expect(resolveLocale(undefined)).toBe('zh-CN')
+  })
+
+  it('every locale has exactly the same key tree as the zh-CN reference', () => {
+    // 语言包键位漂移守卫:任何语言少键/多键/改名都在这里炸出来
+    const keyPathsOf = (obj: Record<string, unknown>, prefix = ''): string[] =>
+      Object.entries(obj).flatMap(([k, v]) =>
+        v && typeof v === 'object' ? keyPathsOf(v as Record<string, unknown>, prefix + k + '.') : [prefix + k],
+      )
+    const reference = keyPathsOf(localeRegistry['zh-CN'] as unknown as Record<string, unknown>).sort()
+    for (const [code, messages] of Object.entries(localeRegistry)) {
+      const keys = keyPathsOf(messages as unknown as Record<string, unknown>).sort()
+      expect(keys, `${code} 键位与 zh-CN 不一致`).toEqual(reference)
+    }
+  })
+
+  it('ja-JP translates user-visible strings (not key placeholders)', () => {
+    const ja = localeRegistry['ja-JP']
+    expect(ja.status.unread).toBe('未読')
+    expect(ja.classLabel.main).toBe('メイン')
+    expect(ja.app.loading).toContain('読み込み')
+    // 参数占位符必须原样保留
+    expect(ja.video.title).toContain('{name}')
+    expect(ja.version.current).toContain('{version}')
   })
 })
 

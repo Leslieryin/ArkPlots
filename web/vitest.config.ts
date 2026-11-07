@@ -15,6 +15,6 @@ execFileSync('python', [path.join(webRoot, '..', 'packaging', 'sync_frontend_ver
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
   },
 })
