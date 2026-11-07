@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createT } from '../src/i18n/createTranslator'
 import { statusLabelKey } from '../src/i18n'
 import { DEFAULT_LOCALE, listLocales, localeRegistry, resolveLocale } from '../src/i18n/locales'
-import { resolveCountry, resolvePlotName } from '../src/i18n/content'
+import { resolveCharacter, resolveCountry, resolvePlotName } from '../src/i18n/content'
 import type { Messages } from '../src/i18n/types'
 
 describe('createT', () => {
@@ -69,5 +69,17 @@ describe('content resolvers', () => {
     expect(resolveCountry('en-US', '不存在的势力')).toBe('不存在的势力')
     expect(resolveCountry('en-US', '')).toBe('')
     expect(resolveCountry('en-US', null)).toBe('')
+  })
+
+  it('resolveCharacter covers major story characters (regression guard)', () => {
+    // 首要剧情角色的官方英文名必须持续有覆盖;未收录名回退源文,不属于失败
+    expect(resolveCharacter('en-US', '特蕾西娅')).toBe('Theresa')
+    expect(resolveCharacter('en-US', '霜星')).toBe('FrostNova')
+    expect(resolveCharacter('en-US', '克丽斯腾·莱特')).toBe('Kristen Wright')
+    expect(resolveCharacter('en-US', '亚当斯·施怀雅')).toBe('Adams Swire')
+    expect(resolveCharacter('en-US', '月见夜')).toBe('Midnight')
+    // 带引号的别名键与带注音的键都能命中
+    expect(resolveCharacter('en-US', '“皇帝的利刃”')).toBe('Emperor\'s Blade')
+    expect(resolveCharacter('en-US', '小沅（yuán）')).toBe('Xiao Yuan')
   })
 })
